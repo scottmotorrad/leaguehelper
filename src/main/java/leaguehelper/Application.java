@@ -8,6 +8,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.service.ApiInfo;
 import springfox.documentation.service.Contact;
@@ -31,6 +33,11 @@ public class Application {
                 .select()
                 .paths(leagueHelperPaths())
                 .build();
+    }
+
+    @Bean
+    public TaskScheduler scheduler() {
+        return new ThreadPoolTaskScheduler();
     }
 
     private ApiInfo apiInfo() {
