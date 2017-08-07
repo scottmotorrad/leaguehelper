@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class MatchReferenceDTO {
+public final class MatchReferenceDTO {
     private final String lane;
     private final long gameId;
     private final int champion;

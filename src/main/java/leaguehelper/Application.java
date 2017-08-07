@@ -40,6 +40,23 @@ public class Application {
         return new ThreadPoolTaskScheduler();
     }
 
+    @Bean
+    public String rapiKey() {
+        String key = System.getenv("RAPI_KEY");
+        return key;
+    }
+
+    @Bean
+    public Long accountId() {
+        String accountId = System.getenv("LOL_HELPER_ACCOUNT_ID");
+        return Long.parseLong(accountId);
+    }
+
+    @Bean
+    public RiotApiHelper riotApiHelper() {
+        return new RiotApiHelper(rapiKey(), accountId());
+    }
+
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
                 .title("League Helper API")
