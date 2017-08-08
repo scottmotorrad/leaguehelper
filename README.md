@@ -18,7 +18,7 @@ cd to .../leaguehelper/
 
 mvn install
 
-spring-boot:run
+mvn spring-boot:run
 
 Navigate to [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 
