@@ -25,6 +25,8 @@ Navigate to [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagge
 
 If you are getting a null pointer exception make sure both environment variables are set to valid values.
 
+Due to RAPI rate limiting the data will not be fully populated until 1.5s per ranked game you've played this season.
+
 # Current Features
 
 ## Duo Queue GG
