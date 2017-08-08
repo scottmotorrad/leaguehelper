@@ -10,9 +10,10 @@ OpenJDK
 [Windows](https://developers.redhat.com/products/openjdk/overview/) [nix](http://openjdk.java.net/)
 
 ##Steps
-Set the LOL_HELPER_ACCOUNT_ID environment variable to the account you would like to analyze 
+Set the LOL_HELPER_ACCOUNT_ID environment variable to the account you would like to analyze. This should be a 64 bit 
+integer.
 
-Set the RAPI_KEY environment variable to your RAPI API key
+Set the RAPI_KEY environment variable to your RAPI API key ie RGAPI-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 cd to .../leaguehelper/
 
@@ -21,6 +22,8 @@ mvn install
 mvn spring-boot:run
 
 Navigate to [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+
+If you are getting a null pointer exception make sure both environment variables are set to valid values.
 
 # Current Features
 
