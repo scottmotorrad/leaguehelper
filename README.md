@@ -6,7 +6,7 @@ An app to help me play league more effectively through data from the Riot API an
 
 [Maven](https://maven.apache.org/download.cgi)
 
-OpenJDK
+OpenJDK 8
 [Windows](https://developers.redhat.com/products/openjdk/overview/) [nix](http://openjdk.java.net/)
 
 ##Steps
