@@ -2,6 +2,14 @@
 An app to help me play league more effectively through data from the Riot API and the magic of swagger UI
 
 # How to run
+##Prereqs
+
+[Maven](https://maven.apache.org/download.cgi)
+
+OpenJDK
+[Windows](https://developers.redhat.com/products/openjdk/overview/) [nix](http://openjdk.java.net/)
+
+##Steps
 Set the LOL_HELPER_ACCOUNT_ID environment variable to the account you would like to analyze 
 
 Set the RAPI_KEY environment variable to your RAPI API key
