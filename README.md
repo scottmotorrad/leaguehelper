@@ -11,8 +11,9 @@ OpenJDK
 - [nix](http://openjdk.java.net/)
 
 ## Steps
-Set the LOL_HELPER_ACCOUNT_ID environment variable to the account you would like to analyze. This should be a 64 bit
-integer.
+Set the LOL_HELPER_ACCOUNT_ID environment variable to the account id you would like to analyze. This should be a 64 bit
+integer. You can get it from RAPI [here](https://developer.riotgames.com/api-methods/#summoner-v3/GET_getBySummonerName). 
+It is the accountId not the id or summonerId. 
 
 Set the RAPI_KEY environment variable to your RAPI API key ie RGAPI-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.
 You can get a RAPI key [here](https://developer.riotgames.com/)
