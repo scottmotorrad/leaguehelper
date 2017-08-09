@@ -3,35 +3,45 @@ package leaguehelper;
 import static org.junit.Assert.assertEquals;
 
 import com.google.gson.Gson;
-import leaguehelper.dto.FriendRatingDTO;
-import leaguehelper.dto.FriendRatingDTO.Rating;
-import leaguehelper.dto.MatchDTO;
-import leaguehelper.dto.ParticipantStatsDTO;
-import leaguehelper.dto.PlayerDTO;
+import com.google.gson.GsonBuilder;
+import com.google.gson.TypeAdapterFactory;
+import leaguehelper.dto.FriendRating.Rating;
+import leaguehelper.dto.ImmutableFriendRating;
+import leaguehelper.dto.ImmutableMatch;
+import leaguehelper.dto.ImmutableParticipantStats;
+import leaguehelper.dto.ImmutablePlayer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.util.List;
+import java.util.ServiceLoader;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 public class RiotApiHelperIT {
 
-    private final Gson gson = new Gson();
+    private Gson gson;
     private final long testAccountId = 37455819L;
 
-    private MatchDTO testMatch;
-    private ParticipantStatsDTO testParticipantStats;
-    private PlayerDTO testPlayer;
+    private ImmutableMatch testMatch;
+    private ImmutableParticipantStats testParticipantStats;
+    private ImmutablePlayer testPlayer;
     private RiotApiHelper helper;
 
     @Before
     public void testSetup() {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        for (TypeAdapterFactory factory : ServiceLoader.load(TypeAdapterFactory.class)) {
+            gsonBuilder.registerTypeAdapterFactory(factory);
+        }
+        gson = gsonBuilder.create();
+
         // TODO use mock web server to mock returning this over the wire instead of just using static JSON
-        testMatch = gson.fromJson(TestData.matchDataJson, MatchDTO.class);
-        testParticipantStats  = gson.fromJson(TestData.participantStatsJson, ParticipantStatsDTO.class);
-        testPlayer  = gson.fromJson(TestData.playerJson, PlayerDTO.class);
-        helper = new RiotApiHelper("test", testAccountId);
+        testMatch = gson.fromJson(TestData.matchDataJson, ImmutableMatch.class);
+        testParticipantStats  = gson.fromJson(TestData.participantStatsJson,
+            ImmutableParticipantStats.class);
+        testPlayer  = gson.fromJson(TestData.playerJson, ImmutablePlayer.class);
+        helper = new RiotApiHelper("test", testAccountId, gson);
     }
 
     @Test
@@ -42,15 +52,15 @@ public class RiotApiHelperIT {
 
     @Test
     public void testGetFriendRatingFromStats() {
-        FriendRatingDTO actual = RiotApiHelper.getFriendRatingFromStats(testParticipantStats, testPlayer);
-        assertEquals(1, actual.getWins());
-        assertEquals(2, actual.getDeaths());
+        ImmutableFriendRating actual = RiotApiHelper.getFriendRatingFromStats(testParticipantStats, testPlayer);
+        assertEquals(1, actual.wins());
+        assertEquals(2, actual.deaths());
         assertEquals(Rating.SOLO, actual.getRating());
     }
 
     @Test
     public void testGetFriendRatingsForMatch() {
-        List<FriendRatingDTO> actual = helper.getFriendRatingsForMatch(testMatch);
+        List<ImmutableFriendRating> actual = helper.getFriendRatingsForMatch(testMatch);
         assertEquals(2, actual.size());
     }
 
