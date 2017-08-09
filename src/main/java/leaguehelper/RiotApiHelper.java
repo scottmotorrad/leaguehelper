@@ -1,27 +1,32 @@
 package leaguehelper;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.TypeAdapterFactory;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
-import leaguehelper.dto.FriendRatingDTO;
-import leaguehelper.dto.MatchDTO;
-import leaguehelper.dto.MatchListDTO;
-import leaguehelper.dto.ParticipantDTO;
-import leaguehelper.dto.ParticipantStatsDTO;
-import leaguehelper.dto.PlayerDTO;
-import lombok.extern.slf4j.Slf4j;
+import leaguehelper.dto.ImmutableFriendRating;
+import leaguehelper.dto.ImmutableMatch;
+import leaguehelper.dto.ImmutableMatchList;
+import leaguehelper.dto.ImmutableParticipant;
+import leaguehelper.dto.ImmutableParticipantStats;
+import leaguehelper.dto.ImmutablePlayer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 
-@Slf4j
 public class RiotApiHelper {
+    private static final Logger log = LoggerFactory.getLogger(RiotApiHelper.class);
     private final OkHttpClient client = new OkHttpClient();
-    private final Gson gson = new Gson();
+    private final Gson gson;
     private final String rapiKey;
     private final Long accountId;
 
@@ -30,12 +35,13 @@ public class RiotApiHelper {
     private static final String matchUrl = "https://na1.api.riotgames.com/lol/match/v3/matches/";
 
     @Autowired
-    public RiotApiHelper(String rapiKey, Long accountId) {
-        this.rapiKey = rapiKey;
-        this.accountId = accountId;
+    public RiotApiHelper(String rapiKey, Long accountId, Gson gson) {
+        this.rapiKey = Objects.requireNonNull(rapiKey);
+        this.accountId = Objects.requireNonNull(accountId);
+        this.gson = Objects.requireNonNull(gson);
     }
 
-    public MatchListDTO getMatches() {
+    public ImmutableMatchList getMatchList() {
         try {
             Request request = new Request.Builder()
                     .url(new StringBuilder(matchListUrl).append(accountId).append(seasonQueryParam).toString())
@@ -47,7 +53,7 @@ public class RiotApiHelper {
                 log.error("Calling Riot API matches failed with " + response.message());
             }
             String json = response.body().string();
-            MatchListDTO matchList = gson.fromJson(json, MatchListDTO.class);
+            ImmutableMatchList matchList = gson.fromJson(json, ImmutableMatchList.class);
             return matchList;
         } catch (IOException ex) {
             log.error("Calling Riot API matches failed", ex);
@@ -55,7 +61,7 @@ public class RiotApiHelper {
         }
     }
 
-    public MatchDTO getMatchDTO(String gameId) {
+    public ImmutableMatch getMatch(String gameId) {
         try {
             String requestUrl = new StringBuilder(matchUrl)
                     .append(gameId)
@@ -71,7 +77,7 @@ public class RiotApiHelper {
                 log.error("Calling Riot API match endpoint failed with " + response.message());
             }
             String json = response.body().string();
-            MatchDTO match = gson.fromJson(json, MatchDTO.class);
+            ImmutableMatch match = gson.fromJson(json, ImmutableMatch.class);
             return match;
         } catch (IOException ex) {
             log.error("Calling Riot match endpoint failed", ex);
@@ -79,50 +85,50 @@ public class RiotApiHelper {
         }
     }
 
-    public List<FriendRatingDTO> getFriendRatingsForMatch(MatchDTO match) {
+    public List<ImmutableFriendRating> getFriendRatingsForMatch(ImmutableMatch match) {
         int teamId = getTeamIdForAccount(accountId, match);
-        List<FriendRatingDTO> friendRatings = new ArrayList<>(4);
+        ImmutableList.Builder<ImmutableFriendRating>  friendRatings = ImmutableList.builder();
 
-        List<ParticipantDTO> participants
-                = match.getParticipants().stream().filter(p -> p.getTeamId() == teamId).collect(Collectors.toList());
+        List<ImmutableParticipant> participants
+                = match.participants().stream().filter(p -> p.teamId() == teamId).collect(Collectors.toList());
 
-        for (ParticipantDTO participant : participants) {
-            PlayerDTO player = match.getParticipantIdentities().stream()
-                    .filter(p -> p.getParticipantId() == participant.getParticipantId())
-                    .findFirst().get().getPlayer();
-            if (player.getAccountId() != accountId) {
-                friendRatings.add(getFriendRatingFromStats(participant.getStats(), player));
+        for (ImmutableParticipant participant : participants) {
+            ImmutablePlayer player = match.participantIdentities().stream()
+                    .filter(p -> p.participantId() == participant.participantId())
+                    .findFirst().get().player();
+            if (player.accountId() != accountId) {
+                friendRatings.add(getFriendRatingFromStats(participant.stats(), player));
             }
         }
 
-        return friendRatings;
+        return friendRatings.build();
     }
 
     @VisibleForTesting
-    public static FriendRatingDTO getFriendRatingFromStats(ParticipantStatsDTO stats, PlayerDTO player) {
-        return new FriendRatingDTO(
-                player.getAccountId(),
-                player.getSummonerName(),
-                1,
-                stats.getKills(),
-                stats.getDeaths(),
-                stats.getAssists(),
-                stats.isWin() ? 1 : 0);
-
+    public static ImmutableFriendRating getFriendRatingFromStats(ImmutableParticipantStats stats, ImmutablePlayer player) {
+        return ImmutableFriendRating.builder()
+            .id(player.accountId())
+            .summonerName(player.summonerName())
+            .gamesPlayed(1)
+            .kills(stats.kills())
+            .deaths(stats.deaths())
+            .assists(stats.assists())
+            .wins(stats.win() ? 1 : 0)
+            .build();
     }
 
     @VisibleForTesting
-    public static int getTeamIdForAccount(long accountId, MatchDTO match) {
+    public static int getTeamIdForAccount(long accountId, ImmutableMatch match) {
         int participantId = getParticipantIdForAccount(accountId, match);
-        return match.getParticipants().stream()
-                .filter(p -> p.getParticipantId() == participantId)
-                .findFirst().get().getTeamId();
+        return match.participants().stream()
+                .filter(p -> p.participantId() == participantId)
+                .findFirst().get().teamId();
     }
 
     @VisibleForTesting
-    public static int getParticipantIdForAccount(long accountId, MatchDTO match) {
-        return match.getParticipantIdentities().stream()
-                .filter(p -> p.getPlayer().getCurrentAccountId() == accountId)
-                .findFirst().get().getParticipantId();
+    public static int getParticipantIdForAccount(long accountId, ImmutableMatch match) {
+        return match.participantIdentities().stream()
+                .filter(p -> p.player().currentAccountId() == accountId)
+                .findFirst().get().participantId();
     }
 }
